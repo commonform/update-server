@@ -1,0 +1,24 @@
+#!/bin/bash
+NEW_PORT="8081"
+OLD_PORT="8082"
+if curl localhost:8081 &>/dev/null ; then
+  if curl localhost:8082 &>/dev/null ; then
+    echo "Both 8081 and 8082 responded!" > /dev/stderr
+    exit 1
+  else
+    NEW_PORT="8082"
+    OLD_PORT="8081"
+  fi
+fi
+
+NEW_ID="api$NEW_PORT"
+OLD_ID="api$OLD_PORT"
+
+npm i -g commonform-server
+
+rm -rf "$NEW_ID-leveldb"
+pm2 start "$NEW_ID.json"
+
+until curl "localhost:$NEW_PORT" &>/dev/null ; do
+  pm2 stop "$OLD_ID"
+done
